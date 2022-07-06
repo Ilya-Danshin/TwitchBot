@@ -1,6 +1,9 @@
 package main
 
 import (
+	"TwitchBot/database"
+	"TwitchBot/internal/bot"
+	"context"
 	"fmt"
 
 	"TwitchBot/config"
@@ -18,11 +21,11 @@ func main() {
 		fmt.Println("parse config error: ", err.Error())
 	}
 
-	fmt.Printf("host: %s\nport: %d\ndatabese name: %s\nuser: %s\npass:%s\n", cfg.DBConf.Host, cfg.DBConf.Port,
-		cfg.DBConf.Database, cfg.DBConf.User, cfg.DBConf.Pass)
-
-	for _, user := range cfg.Users {
-		fmt.Printf("Name: %s\n", user.Name)
-		fmt.Printf("Modules: %s\n", user.Modules)
+	err = database.DB.InitDB(context.Background(), cfg.DBConf)
+	if err != nil {
+		fmt.Println("database initialization error: ", err.Error())
 	}
+
+	bot.InitBot(cfg.Users)
+	bot.LoopBot()
 }
