@@ -1,7 +1,9 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 
@@ -18,6 +20,12 @@ type DBConfig struct {
 
 type Config struct {
 	DBConf *DBConfig
+	Users  []*User
+}
+
+type User struct {
+	Name    string   `json:"name"`
+	Modules []string `json:"modules"`
 }
 
 func InitConfig() error {
@@ -40,8 +48,14 @@ func ParseConfig() (*Config, error) {
 		return nil, err
 	}
 
+	users, err := getUsers()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		DBConf: dbConf,
+		Users:  users,
 	}, nil
 }
 
@@ -83,4 +97,24 @@ func getDBConfig() (*DBConfig, error) {
 		User:     user,
 		Pass:     password,
 	}, nil
+}
+
+func getUsers() ([]*User, error) {
+	path, ok := os.LookupEnv("USERS_SETTINGS_PATH")
+	if !ok {
+		return nil, fmt.Errorf("env USERS_PATH is not set")
+	}
+
+	content, err := ioutil.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var users []*User
+	err = json.Unmarshal(content, &users)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
