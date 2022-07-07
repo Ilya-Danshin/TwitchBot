@@ -3,6 +3,7 @@ module TwitchBot
 go 1.18
 
 require (
+	github.com/gempir/go-twitch-irc/v3 v3.2.0
 	github.com/jackc/pgx/v4 v4.16.1
 	github.com/joho/godotenv v1.4.0
 )

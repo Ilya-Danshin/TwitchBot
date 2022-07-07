@@ -26,6 +26,6 @@ func main() {
 		fmt.Println("database initialization error: ", err.Error())
 	}
 
-	bot.InitBot(cfg.Users)
+	bot.InitBot(cfg.Users, cfg.Bot)
 	bot.LoopBot()
 }

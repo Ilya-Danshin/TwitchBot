@@ -9,14 +9,10 @@ var errorsChan chan error
 var threads []*userThread
 
 // InitBot just run all bot process
-func InitBot(users []*config.User) {
+func InitBot(users []*config.User, botSettings *config.BotSettings) {
 	errorsChan = make(chan error)
 	for _, user := range users {
-		threads = append(threads, &userThread{
-			ErrorChan:   errorsChan,
-			ChannelName: user.Name,
-			Modules:     user.Modules, // TODO: Create function to translate string name module to pointer to function
-		})
+		threads = append(threads, NewUserThread(user, botSettings))
 	}
 }
 
