@@ -1,12 +1,12 @@
 package main
 
 import (
-	"TwitchBot/database"
-	"TwitchBot/internal/bot"
 	"context"
 	"fmt"
 
 	"TwitchBot/config"
+	"TwitchBot/database"
+	"TwitchBot/internal/bot"
 )
 
 func main() {

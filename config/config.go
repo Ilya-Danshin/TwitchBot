@@ -26,6 +26,7 @@ type Config struct {
 
 type User struct {
 	Name    string   `json:"name"`
+	Prefix  string   `json:"prefix"`
 	Modules []string `json:"modules"`
 }
 

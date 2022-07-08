@@ -1,8 +1,9 @@
 package bot
 
 import (
-	"TwitchBot/config"
 	"fmt"
+
+	"TwitchBot/config"
 )
 
 var errorsChan chan error
