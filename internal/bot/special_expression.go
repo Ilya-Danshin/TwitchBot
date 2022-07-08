@@ -13,6 +13,8 @@ import (
 var reAuthorName *regexp.Regexp
 var reChance *regexp.Regexp
 
+//reInit initialize regular expression for special expression that should be replaced
+// by some expression like number or message author name
 func reInit() error {
 	var err error
 
@@ -31,6 +33,7 @@ func reInit() error {
 	return nil
 }
 
+//compileMessage start all find & replace function
 func compileMessage(message twitch.PrivateMessage, answer string) (string, error) {
 	mes, err := compileAuthorName(message.User.Name, answer)
 
@@ -42,6 +45,7 @@ func compileMessage(message twitch.PrivateMessage, answer string) (string, error
 	return mes, nil
 }
 
+//compileAuthorName replace {%author_name%} by message author name
 func compileAuthorName(author, answer string) (string, error) {
 	res := reAuthorName.FindAllString(answer, -1)
 
@@ -52,6 +56,7 @@ func compileAuthorName(author, answer string) (string, error) {
 	return answer, nil
 }
 
+//compileChance replace {%num1:num2%} by random integer in range (num1-num2)
 func compileChance(message string) (string, error) {
 	res := reChance.FindAllString(message, -1)
 
@@ -74,6 +79,7 @@ func compileChance(message string) (string, error) {
 	return message, nil
 }
 
+//getInterval from string {%num1:num2%} get low and bottom border
 func getInterval(interval string) (int, int, error) {
 	interval = interval[9 : len(interval)-2] // 9 = 2('{%') + 7('chance:')
 	inter := strings.Split(interval, ":")

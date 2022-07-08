@@ -58,13 +58,13 @@ func (t *userThread) Run() {
 
 //messageFilter do all work with received message
 func (t *userThread) messageFilter(message twitch.PrivateMessage) {
-	//fmt.Printf("Channel: %s Author: %s Message: %s\n", t.ChannelName, message.User.Name, message.Message)
 	if strings.HasPrefix(message.Message, t.Prefix) { // cansel messages without prefix
 		answer, err := t.findCommand(message.Message[len(t.Prefix):])
 		if err != nil {
 			fmt.Printf("error to find command: %s error: %s", message.Message, err.Error())
 			return
 		}
+
 		if answer != "" {
 			mes, err := compileMessage(message, answer)
 			if err != nil {
@@ -75,6 +75,7 @@ func (t *userThread) messageFilter(message twitch.PrivateMessage) {
 	}
 }
 
+//findCommand start search for command in DB
 func (t *userThread) findCommand(command string) (string, error) {
 	answer, err := database.DB.FindCommand(context.Background(), t.ChannelName, command)
 	if err != nil {
@@ -83,6 +84,7 @@ func (t *userThread) findCommand(command string) (string, error) {
 	return answer, nil
 }
 
+//sendMessage send message
 func (t *userThread) sendMessage(message string) {
 	t.Client.Say(t.ChannelName, message)
 }
