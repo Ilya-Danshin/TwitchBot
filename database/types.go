@@ -1,8 +1,9 @@
 package database
 
 import (
-	"TwitchBot/config"
 	"context"
+
+	"TwitchBot/config"
 )
 
 type DbServiceIFace interface {

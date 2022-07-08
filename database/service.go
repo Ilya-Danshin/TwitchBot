@@ -1,9 +1,11 @@
 package database
 
 import (
-	"TwitchBot/config"
 	"context"
 	"fmt"
+
+	"TwitchBot/config"
+
 	"github.com/jackc/pgx/v4"
 )
 

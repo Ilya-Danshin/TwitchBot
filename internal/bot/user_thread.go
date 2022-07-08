@@ -1,12 +1,12 @@
 package bot
 
 import (
-	"TwitchBot/database"
 	"context"
 	"fmt"
 	"strings"
 
 	"TwitchBot/config"
+	"TwitchBot/database"
 
 	"github.com/gempir/go-twitch-irc/v3"
 )
@@ -66,8 +66,11 @@ func (t *userThread) messageFilter(message twitch.PrivateMessage) {
 			return
 		}
 		if answer != "" {
-			// TODO: here should be check answer for special constructs
-			t.sendMessage(answer)
+			mes, err := compileMessage(message, answer)
+			if err != nil {
+				fmt.Printf("error compile message: %s error: %s", answer, err.Error())
+			}
+			t.sendMessage(mes)
 		}
 	}
 }

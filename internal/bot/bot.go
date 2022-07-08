@@ -10,11 +10,17 @@ var errorsChan chan error
 var threads []*userThread
 
 // InitBot just run all bot process
-func InitBot(users []*config.User, botSettings *config.BotSettings) {
+func InitBot(users []*config.User, botSettings *config.BotSettings) error {
+	err := reInit()
+	if err != nil {
+		return err
+	}
 	errorsChan = make(chan error)
 	for _, user := range users {
 		threads = append(threads, NewUserThread(user, botSettings))
 	}
+
+	return nil
 }
 
 // LoopBot listening to channel, where bot send errors
