@@ -19,8 +19,8 @@ func InitBot(users []*config.User, botSettings *config.BotSettings) {
 
 // LoopBot listening to channel, where bot send errors
 func LoopBot() {
-	for i, thread := range threads {
-		go thread.Run(i)
+	for _, thread := range threads {
+		go thread.Run()
 	}
 
 	for {

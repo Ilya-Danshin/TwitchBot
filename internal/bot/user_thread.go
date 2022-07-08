@@ -41,7 +41,7 @@ func NewUserThread(user *config.User, botCfg *config.BotSettings) *userThread {
 }
 
 //Run thread
-func (t *userThread) Run(i int) {
+func (t *userThread) Run() {
 	client := twitch.NewClient(t.BotSettings.Nickname, t.BotSettings.Oauth)
 
 	client.OnPrivateMessage(t.messageFilter)
@@ -66,6 +66,7 @@ func (t *userThread) messageFilter(message twitch.PrivateMessage) {
 			return
 		}
 		if answer != "" {
+			// TODO: here should be check answer for special constructs
 			t.sendMessage(answer)
 		}
 	}
