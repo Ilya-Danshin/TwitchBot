@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"TwitchBot/internal/bot/commands"
 	"context"
 	"fmt"
 	"strings"
@@ -25,6 +26,12 @@ type userThread struct {
 
 	Client *twitch.Client
 }
+
+const (
+	common   string = "common"
+	duel            = "duel"
+	moderate        = "moderate"
+)
 
 //NewUserThread create new thread object
 func NewUserThread(user *config.User, botCfg *config.BotSettings) *userThread {
@@ -58,30 +65,97 @@ func (t *userThread) Run() {
 
 //messageFilter do all work with received message
 func (t *userThread) messageFilter(message twitch.PrivateMessage) {
-	if strings.HasPrefix(message.Message, t.Prefix) { // cansel messages without prefix
-		answer, err := t.findCommand(message.Message[len(t.Prefix):])
-		if err != nil {
-			fmt.Printf("error to find command: %s error: %s", message.Message, err.Error())
-			return
-		}
-
-		if answer != "" {
-			mes, err := compileMessage(message, answer)
+	go func() {
+		if strings.HasPrefix(message.Message, t.Prefix) { // cansel messages without prefix
+			answer, commandType, err := t.findCommand(message.Message[len(t.Prefix):])
 			if err != nil {
-				fmt.Printf("error compile message: %s error: %s", answer, err.Error())
+				fmt.Printf("error to find command: %s error: %s", message.Message, err.Error())
+				return
 			}
-			go t.sendMessage(mes)
+
+			if answer != "" {
+				var mes string
+				if commandType == common {
+					mes, err = commands.CompileMessage(message, answer)
+					if err != nil {
+						fmt.Printf("error compile message: %s error: %s", answer, err.Error())
+					}
+					go t.sendMessage(mes)
+				}
+
+				if commandType == duel {
+					mes, err = commands.CompileDuel(message, answer)
+					if err != nil {
+						fmt.Printf("error compile message: %s error: %s", answer, err.Error())
+					}
+					go t.sendMessage(mes)
+					// TODO: Here should be goroutine call func that choose duel winner
+				}
+
+			}
 		}
-	}
+	}()
 }
 
 //findCommand start search for command in DB
-func (t *userThread) findCommand(command string) (string, error) {
-	answer, err := database.DB.FindCommand(context.Background(), t.ChannelName, command)
-	if err != nil {
-		return "", nil
+func (t *userThread) findCommand(command string) (string, string, error) {
+	var answer string
+	var err error
+	var find bool
+
+	if t.isDuelEnabled() {
+		answer, find, err = database.DB.FindDuelCommand(context.Background(), t.ChannelName)
+		if err != nil {
+			return "", "", err
+		}
+		if find {
+			return answer, duel, nil
+		}
 	}
-	return answer, nil
+	if t.isCommonEnabled() {
+		answer, find, err = database.DB.FindCommand(context.Background(), t.ChannelName, command)
+		if err != nil {
+			return "", "", err
+		}
+		if find {
+			return answer, common, nil
+		}
+	}
+	if t.isModerateEnabled() {
+		return answer, moderate, nil
+	}
+
+	return answer, "", nil
+}
+
+func (t *userThread) isCommonEnabled() bool {
+	for _, module := range t.Modules {
+		if module == common {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (t *userThread) isDuelEnabled() bool {
+	for _, module := range t.Modules {
+		if module == duel {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (t *userThread) isModerateEnabled() bool {
+	for _, module := range t.Modules {
+		if module == moderate {
+			return true
+		}
+	}
+
+	return false
 }
 
 //sendMessage send message

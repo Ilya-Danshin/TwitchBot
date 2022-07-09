@@ -28,7 +28,7 @@ func (db *DBClient) InitDB(ctx context.Context, config *config.DBConfig) error {
 	return nil
 }
 
-func (db *DBClient) FindCommand(ctx context.Context, channel, command string) (string, error) {
+func (db *DBClient) FindCommand(ctx context.Context, channel, command string) (string, bool, error) {
 	var answer string
 
 	err := db.db.QueryRow(ctx,
@@ -36,10 +36,12 @@ func (db *DBClient) FindCommand(ctx context.Context, channel, command string) (s
 			FROM commands
 			WHERE channel = $1 AND command = $2`, channel, command).Scan(&answer)
 	if err != nil {
-		if err != pgx.ErrNoRows {
-			return "", err
+		if err == pgx.ErrNoRows {
+			return "", false, nil
+		} else {
+			return "", false, err
 		}
 	}
 
-	return answer, nil
+	return answer, true, nil
 }
