@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"TwitchBot/internal/channel_interaction"
 	"fmt"
 	"github.com/gempir/go-twitch-irc/v3"
 	"math/rand"
@@ -12,6 +13,7 @@ import (
 
 var reAuthorName *regexp.Regexp
 var reChance *regexp.Regexp
+var reRandomChatter *regexp.Regexp
 
 //reInit initialize regular expression for special expression that should be replaced
 // by some expression like number or message author name
@@ -30,14 +32,27 @@ func reInit() error {
 		return err
 	}
 
+	reRandomChatter, err = regexp.Compile(`\{%random_chatter%}`)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
 //compileMessage start all find & replace function
 func compileMessage(message twitch.PrivateMessage, answer string) (string, error) {
 	mes, err := compileAuthorName(message.User.Name, answer)
+	if err != nil {
+		return "", err
+	}
 
 	mes, err = compileChance(mes)
+	if err != nil {
+		return "", err
+	}
+
+	mes, err = compileRandomChatter(message.Channel, answer)
 	if err != nil {
 		return "", err
 	}
@@ -46,14 +61,14 @@ func compileMessage(message twitch.PrivateMessage, answer string) (string, error
 }
 
 //compileAuthorName replace {%author_name%} by message author name
-func compileAuthorName(author, answer string) (string, error) {
-	res := reAuthorName.FindAllString(answer, -1)
+func compileAuthorName(author, message string) (string, error) {
+	res := reAuthorName.FindAllString(message, -1)
 
 	for _, expr := range res {
-		answer = strings.Replace(answer, expr, author, 1)
+		message = strings.Replace(message, expr, author, 1)
 	}
 
-	return answer, nil
+	return message, nil
 }
 
 //compileChance replace {%num1:num2%} by random integer in range (num1-num2)
@@ -95,4 +110,37 @@ func getInterval(interval string) (int, int, error) {
 	}
 
 	return highBorder, lowBorder, nil
+}
+
+func compileRandomChatter(channel, message string) (string, error) {
+	res := reRandomChatter.FindAllString(message, -1)
+
+	randomChatter, err := getRandomChatter(channel)
+	if err != nil {
+		return "", err
+	}
+
+	for _, expr := range res {
+		message = strings.Replace(message, expr, randomChatter, 1)
+	}
+
+	return message, nil
+}
+
+func getRandomChatter(channel string) (string, error) {
+	info, err := channel_interaction.GetChannelChatters(channel)
+	if err != nil {
+		return "", err
+	}
+	chatters := info.Chatters
+	allChatters := append(chatters.Broadcaster, chatters.Vips...)
+	allChatters = append(allChatters, chatters.Moderators...)
+	allChatters = append(allChatters, chatters.Staff...)
+	allChatters = append(allChatters, chatters.Admins...)
+	allChatters = append(allChatters, chatters.GlobalMods...)
+	allChatters = append(allChatters, chatters.Viewers...)
+
+	randIndex := rand.Intn(len(allChatters))
+
+	return allChatters[randIndex], nil
 }

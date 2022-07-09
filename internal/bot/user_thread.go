@@ -70,7 +70,7 @@ func (t *userThread) messageFilter(message twitch.PrivateMessage) {
 			if err != nil {
 				fmt.Printf("error compile message: %s error: %s", answer, err.Error())
 			}
-			t.sendMessage(mes)
+			go t.sendMessage(mes)
 		}
 	}
 }
