@@ -49,3 +49,53 @@ func GetChannelChatters(channel string) (*ChatInfo, error) {
 
 	return &info, nil
 }
+
+func IsChatterInChat(channel, nickname string) (bool, error) {
+	info, err := GetChannelChatters(channel)
+	if err != nil {
+		return false, err
+	}
+
+	chatters := info.Chatters
+	// In every group chatter in alphabetical order so try to find in largest group
+	find := userSearch(chatters.Viewers, nickname)
+	if find {
+		return true, nil
+	}
+	find = userSearch(chatters.Vips, nickname)
+	if find {
+		return true, nil
+	}
+	find = userSearch(chatters.Moderators, nickname)
+	if find {
+		return true, nil
+	}
+	find = userSearch(chatters.Broadcaster, nickname)
+	if find {
+		return true, nil
+	}
+	find = userSearch(chatters.Staff, nickname)
+	if find {
+		return true, nil
+	}
+	find = userSearch(chatters.GlobalMods, nickname)
+	if find {
+		return true, nil
+	}
+	find = userSearch(chatters.Admins, nickname)
+	if find {
+		return true, nil
+	}
+	return false, nil
+}
+
+// In every group strings should be in alphabetical order, but sometimes his not, so can't use binary search
+func userSearch(arr []string, user string) bool {
+	for _, nickname := range arr {
+		if nickname == user {
+			return true
+		}
+	}
+
+	return false
+}

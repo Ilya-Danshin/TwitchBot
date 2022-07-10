@@ -2,6 +2,7 @@ package commands
 
 import (
 	"TwitchBot/database"
+	"TwitchBot/internal/channel_interaction"
 	"context"
 	"github.com/gempir/go-twitch-irc/v3"
 	"strings"
@@ -27,7 +28,7 @@ func compileDuelStats(message string, authorStats, oppoStats *database.DuelStats
 	return message, nil
 }
 
-func compileDuelNames(message, authorName, oppoName string) (string, error) {
+func compileDuelNames(message, oppoName string) (string, error) {
 	res := reDuelOppo.FindAllString(message, -1)
 
 	for _, expr := range res {
@@ -37,7 +38,7 @@ func compileDuelNames(message, authorName, oppoName string) (string, error) {
 	return message, nil
 }
 
-func CompileDuel(message twitch.PrivateMessage, answer string) (string, error) {
+func CompileDuel(message twitch.PrivateMessage, answer, prefix, duelCommand string) (string, error) {
 	mes, err := compileAuthorName(answer, message.User.Name)
 	if err != nil {
 		return "", err
@@ -47,8 +48,8 @@ func CompileDuel(message twitch.PrivateMessage, answer string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	var oppo string
-	oppo, err = getRandomChatter(message.Channel)
+
+	oppo, err := chooseDuelTarget(message, prefix, duelCommand)
 	if err != nil {
 		return "", err
 	}
@@ -62,7 +63,7 @@ func CompileDuel(message twitch.PrivateMessage, answer string) (string, error) {
 		return "", err
 	}
 
-	mes, err = compileDuelNames(mes, message.User.Name, oppo)
+	mes, err = compileDuelNames(mes, oppo)
 	if err != nil {
 		return "", err
 	}
@@ -73,4 +74,34 @@ func CompileDuel(message twitch.PrivateMessage, answer string) (string, error) {
 	}
 
 	return mes, nil
+}
+
+func chooseDuelTarget(message twitch.PrivateMessage, prefix, duelCommand string) (string, error) {
+	var oppo string
+	var err error
+
+	if len([]rune(message.Message)) > len([]rune(prefix+duelCommand)) {
+		// If its target duel
+		// Trim duel-word and '@'
+		oppo = strings.TrimPrefix(message.Message, prefix+duelCommand+" ")
+		if oppo[0] == '@' {
+			oppo = strings.TrimPrefix(oppo, "@")
+		}
+		oppo = strings.ToLower(oppo)
+		inChat, err := channel_interaction.IsChatterInChat(message.Channel, oppo)
+		if err != nil {
+			return "", err
+		}
+		if !inChat {
+			return "", nil
+		}
+	} else {
+		// If its non-target duel
+		oppo, err = getRandomChatter(message.Channel)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return oppo, nil
 }

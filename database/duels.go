@@ -19,8 +19,8 @@ func (s *DuelStats) String() string {
 	return "(duels: 0, wins: 0, winrate: 0.0%)"
 }
 
-func (db *DBClient) FindDuelCommand(ctx context.Context, channel string) (string, bool, error) {
-	return db.FindCommand(ctx, channel, "дуэль")
+func (db *DBClient) FindDuelCommand(ctx context.Context, channel string, duel string) (string, bool, error) {
+	return db.FindCommand(ctx, channel, duel)
 }
 
 func (db *DBClient) FindDuelUser(ctx context.Context, username string) (*DuelStats, error) {

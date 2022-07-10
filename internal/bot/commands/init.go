@@ -13,7 +13,7 @@ var reDuelStatsAuthor *regexp.Regexp
 var reDuelStatsOppo *regexp.Regexp
 var reDuelOppo *regexp.Regexp
 
-//reInit initialize regular expression for special expression that should be replaced
+//REInit initialize regular expression for special expression that should be replaced
 // by some expression like number or message author name
 func REInit() error {
 	var err error

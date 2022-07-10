@@ -22,6 +22,7 @@ type userThread struct {
 	ErrorChan   chan error
 	ChannelName string
 	Prefix      string
+	Duel        string
 	Modules     []string
 
 	Client *twitch.Client
@@ -43,6 +44,7 @@ func NewUserThread(user *config.User, botCfg *config.BotSettings) *userThread {
 		ErrorChan:   errorsChan,
 		ChannelName: user.Name,
 		Prefix:      user.Prefix,
+		Duel:        user.Duel,
 		Modules:     user.Modules, // TODO: Create function to translate string name module to pointer to function
 	}
 }
@@ -74,27 +76,48 @@ func (t *userThread) messageFilter(message twitch.PrivateMessage) {
 			}
 
 			if answer != "" {
-				var mes string
 				if commandType == common {
-					mes, err = commands.CompileMessage(message, answer)
-					if err != nil {
-						fmt.Printf("error compile message: %s error: %s", answer, err.Error())
-					}
-					go t.sendMessage(mes)
+					t.commonCommandHandler(message, answer)
+					return
 				}
-
 				if commandType == duel {
-					mes, err = commands.CompileDuel(message, answer)
-					if err != nil {
-						fmt.Printf("error compile message: %s error: %s", answer, err.Error())
-					}
-					go t.sendMessage(mes)
-					// TODO: Here should be goroutine call func that choose duel winner
+					t.duelCommandHandler(message, answer)
+					return
+				}
+				if commandType == moderate {
+					t.moderateCommandHandler(message, answer)
+					return
 				}
 
 			}
 		}
 	}()
+}
+
+//commonCommandHandler handler for all common chat commands
+func (t *userThread) commonCommandHandler(message twitch.PrivateMessage, answer string) {
+	mes, err := commands.CompileMessage(message, answer)
+	if err != nil {
+		fmt.Printf("error compile message: %s error: %s", answer, err.Error())
+	}
+	go t.sendMessage(mes)
+}
+
+//duelCommandHandler handler for duel chat command
+func (t *userThread) duelCommandHandler(message twitch.PrivateMessage, answer string) {
+	mes, err := commands.CompileDuel(message, answer, t.Prefix, t.Duel)
+	if err != nil {
+		fmt.Printf("error compile message: %s error: %s", answer, err.Error())
+	}
+	if mes != "" { // If there is empty message than duel was canceled or was error
+		go t.sendMessage(mes)
+
+	}
+}
+
+//moderateCommandHandler handler for all moderate chat commands
+func (t *userThread) moderateCommandHandler(message twitch.PrivateMessage, answer string) {
+	return
 }
 
 //findCommand start search for command in DB
@@ -104,12 +127,14 @@ func (t *userThread) findCommand(command string) (string, string, error) {
 	var find bool
 
 	if t.isDuelEnabled() {
-		answer, find, err = database.DB.FindDuelCommand(context.Background(), t.ChannelName)
-		if err != nil {
-			return "", "", err
-		}
-		if find {
-			return answer, duel, nil
+		if strings.HasPrefix(command, t.Duel) {
+			answer, find, err = database.DB.FindDuelCommand(context.Background(), t.ChannelName, t.Duel)
+			if err != nil {
+				return "", "", err
+			}
+			if find {
+				return answer, duel, nil
+			}
 		}
 	}
 	if t.isCommonEnabled() {
