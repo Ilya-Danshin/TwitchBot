@@ -2,11 +2,21 @@
   {
     "name": "",
     "prefix": "",
-    "modules": []
+    "duel": "",
+    "duel_delay": 3,
+    "modules": [
+      "common",
+      "duel",
+      "moderate"
+    ]
   },
   {
     "name": "",
     "prefix": "",
-    "modules": []
+    "duel": "",
+    "duel_delay": 1,
+    "modules": [
+      "common"
+    ]
   }
 ]

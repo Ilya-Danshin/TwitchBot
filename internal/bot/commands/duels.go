@@ -5,6 +5,7 @@ import (
 	"TwitchBot/internal/channel_interaction"
 	"context"
 	"github.com/gempir/go-twitch-irc/v3"
+	"math/rand"
 	"strings"
 )
 
@@ -38,42 +39,42 @@ func compileDuelNames(message, oppoName string) (string, error) {
 	return message, nil
 }
 
-func CompileDuel(message twitch.PrivateMessage, answer, prefix, duelCommand string) (string, error) {
+func CompileDuel(message twitch.PrivateMessage, answer, prefix, duelCommand string) (string, string, error) {
 	mes, err := compileAuthorName(answer, message.User.Name)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	mes, err = compileChance(mes)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	oppo, err := chooseDuelTarget(message, prefix, duelCommand)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	authorStats, err := database.DB.FindDuelUser(context.Background(), message.User.Name)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 	oppoStats, err := database.DB.FindDuelUser(context.Background(), oppo)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	mes, err = compileDuelNames(mes, oppo)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	mes, err = compileDuelStats(mes, authorStats, oppoStats)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return mes, nil
+	return mes, oppo, nil
 }
 
 func chooseDuelTarget(message twitch.PrivateMessage, prefix, duelCommand string) (string, error) {
@@ -104,4 +105,89 @@ func chooseDuelTarget(message twitch.PrivateMessage, prefix, duelCommand string)
 	}
 
 	return oppo, nil
+}
+
+func GetDuelWinner(message twitch.PrivateMessage, oppo string) (string, error) {
+	answer, err := database.DB.GetDuelFinishCommand(context.Background(), message.Channel)
+	if err != nil {
+		return "", err
+	}
+
+	authorStats, err := database.DB.FindDuelUser(context.Background(), message.User.Name)
+	if err != nil {
+		return "", err
+	}
+
+	oppoStats, err := database.DB.FindDuelUser(context.Background(), oppo)
+	if err != nil {
+		return "", err
+	}
+
+	mes, err := compileDuelFinishMessage(message, answer, oppo, authorStats, oppoStats)
+	if err != nil {
+		return "", err
+	}
+
+	winner := rand.Intn(2)
+	if winner%2 == 0 {
+		mes, err = compileDuelWinner(mes, message.User.Name, oppo)
+		if err != nil {
+			return "", err
+		}
+		err = database.DB.RefreshDuelStats(context.Background(), message.User.Name, oppo)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		mes, err = compileDuelWinner(mes, oppo, message.User.Name)
+		if err != nil {
+			return "", err
+		}
+		err = database.DB.RefreshDuelStats(context.Background(), oppo, message.User.Name)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return mes, nil
+}
+
+func compileDuelWinner(answer, winner, loser string) (string, error) {
+	res := reDuelWinner.FindAllString(answer, -1)
+
+	for _, expr := range res {
+		answer = strings.Replace(answer, expr, winner, 1)
+	}
+
+	res = reDuelLoser.FindAllString(answer, -1)
+
+	for _, expr := range res {
+		answer = strings.Replace(answer, expr, loser, 1)
+	}
+
+	return answer, nil
+}
+
+func compileDuelFinishMessage(message twitch.PrivateMessage, answer, oppo string, authorStats, oppoStats *database.DuelStats) (string, error) {
+	mes, err := compileAuthorName(answer, message.User.Name)
+	if err != nil {
+		return "", err
+	}
+
+	mes, err = compileChance(mes)
+	if err != nil {
+		return "", err
+	}
+
+	mes, err = compileDuelNames(mes, oppo)
+	if err != nil {
+		return "", err
+	}
+
+	mes, err = compileDuelStats(mes, authorStats, oppoStats)
+	if err != nil {
+		return "", err
+	}
+
+	return mes, nil
 }

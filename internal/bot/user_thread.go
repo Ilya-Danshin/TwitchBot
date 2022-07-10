@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"TwitchBot/config"
 	"TwitchBot/database"
@@ -23,6 +24,7 @@ type userThread struct {
 	ChannelName string
 	Prefix      string
 	Duel        string
+	DuelDelay   int
 	Modules     []string
 
 	Client *twitch.Client
@@ -45,7 +47,8 @@ func NewUserThread(user *config.User, botCfg *config.BotSettings) *userThread {
 		ChannelName: user.Name,
 		Prefix:      user.Prefix,
 		Duel:        user.Duel,
-		Modules:     user.Modules, // TODO: Create function to translate string name module to pointer to function
+		DuelDelay:   user.DuelDelay,
+		Modules:     user.Modules,
 	}
 }
 
@@ -67,31 +70,30 @@ func (t *userThread) Run() {
 
 //messageFilter do all work with received message
 func (t *userThread) messageFilter(message twitch.PrivateMessage) {
-	go func() {
-		if strings.HasPrefix(message.Message, t.Prefix) { // cansel messages without prefix
-			answer, commandType, err := t.findCommand(message.Message[len(t.Prefix):])
-			if err != nil {
-				fmt.Printf("error to find command: %s error: %s", message.Message, err.Error())
+	if strings.HasPrefix(message.Message, t.Prefix) { // cansel messages without prefix
+		answer, commandType, err := t.findCommand(message.Message[len(t.Prefix):])
+		if err != nil {
+			fmt.Printf("error to find command: %s error: %s", message.Message, err.Error())
+			return
+		}
+
+		if answer != "" {
+			if commandType == common {
+				t.commonCommandHandler(message, answer)
+				return
+			}
+			if commandType == duel {
+				t.duelCommandHandler(message, answer)
+				return
+			}
+			if commandType == moderate {
+				t.moderateCommandHandler(message, answer)
 				return
 			}
 
-			if answer != "" {
-				if commandType == common {
-					t.commonCommandHandler(message, answer)
-					return
-				}
-				if commandType == duel {
-					t.duelCommandHandler(message, answer)
-					return
-				}
-				if commandType == moderate {
-					t.moderateCommandHandler(message, answer)
-					return
-				}
-
-			}
 		}
-	}()
+	}
+
 }
 
 //commonCommandHandler handler for all common chat commands
@@ -105,13 +107,24 @@ func (t *userThread) commonCommandHandler(message twitch.PrivateMessage, answer 
 
 //duelCommandHandler handler for duel chat command
 func (t *userThread) duelCommandHandler(message twitch.PrivateMessage, answer string) {
-	mes, err := commands.CompileDuel(message, answer, t.Prefix, t.Duel)
+	mes, oppo, err := commands.CompileDuel(message, answer, t.Prefix, t.Duel)
 	if err != nil {
-		fmt.Printf("error compile message: %s error: %s", answer, err.Error())
+		fmt.Printf("error compile duel message: %s error: %s", answer, err.Error())
 	}
 	if mes != "" { // If there is empty message than duel was canceled or was error
 		go t.sendMessage(mes)
+		// Async call for
+		go func() {
+			mes, err = commands.GetDuelWinner(message, oppo)
+			if err != nil {
+				fmt.Printf("error get duel winner message: %s error: %s", answer, err.Error())
+			}
+			time.Sleep(time.Second * time.Duration(t.DuelDelay))
 
+			if mes != "" {
+				go t.sendMessage(mes)
+			}
+		}()
 	}
 }
 

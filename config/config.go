@@ -25,10 +25,11 @@ type Config struct {
 }
 
 type User struct {
-	Name    string   `json:"name"`
-	Prefix  string   `json:"prefix"`
-	Duel    string   `json:"duel"`
-	Modules []string `json:"modules"`
+	Name      string   `json:"name"`
+	Prefix    string   `json:"prefix"`
+	Duel      string   `json:"duel"`
+	DuelDelay int      `json:"duel_delay"`
+	Modules   []string `json:"modules"`
 }
 
 type BotSettings struct {

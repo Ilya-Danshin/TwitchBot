@@ -12,6 +12,8 @@ var reRandomChatter *regexp.Regexp
 var reDuelStatsAuthor *regexp.Regexp
 var reDuelStatsOppo *regexp.Regexp
 var reDuelOppo *regexp.Regexp
+var reDuelWinner *regexp.Regexp
+var reDuelLoser *regexp.Regexp
 
 //REInit initialize regular expression for special expression that should be replaced
 // by some expression like number or message author name
@@ -46,6 +48,16 @@ func REInit() error {
 	}
 
 	reDuelOppo, err = regexp.Compile(`\{%oppo_duel%}`)
+	if err != nil {
+		return err
+	}
+
+	reDuelWinner, err = regexp.Compile(`\{%duel_winner%}`)
+	if err != nil {
+		return err
+	}
+
+	reDuelLoser, err = regexp.Compile(`\{%duel_loser%}`)
 	if err != nil {
 		return err
 	}

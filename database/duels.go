@@ -14,7 +14,7 @@ type DuelStats struct {
 func (s *DuelStats) String() string {
 	if s.duels != 0 {
 		return fmt.Sprintf("(duels: %d, wins: %d, winrate: %.1f%%)", s.duels, s.wins,
-			float64(s.wins)/float64(s.duels))
+			float64(s.wins)/float64(s.duels)*100)
 	}
 	return "(duels: 0, wins: 0, winrate: 0.0%)"
 }
@@ -51,7 +51,64 @@ func (db *DBClient) addNewUser(ctx context.Context, username string) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	rows.Close()
+
+	return nil
+}
+
+func (db *DBClient) GetDuelFinishCommand(ctx context.Context, channel string) (string, error) {
+	var answer string
+	err := db.db.QueryRow(ctx,
+		`SELECT answer 
+			FROM commands
+			WHERE command='duel_finish' AND channel=$1`, channel).Scan(&answer)
+
+	if err != nil {
+		return "", err
+	}
+
+	return answer, nil
+}
+
+func (db *DBClient) RefreshDuelStats(ctx context.Context, winner, loser string) error {
+	err := db.addNewDuelInStats(ctx, winner)
+	if err != nil {
+		return err
+	}
+
+	err = db.addNewDuelInStats(ctx, loser)
+	if err != nil {
+		return err
+	}
+
+	err = db.addNewDuelWin(ctx, winner)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *DBClient) addNewDuelInStats(ctx context.Context, username string) error {
+	err := db.db.QueryRow(ctx,
+		`UPDATE duel_statistics
+			SET duels = duels + 1
+			WHERE nickname = $1`, username).Scan()
+	if err != nil && err != pgx.ErrNoRows {
+		return err
+	}
+
+	return nil
+}
+
+func (db *DBClient) addNewDuelWin(ctx context.Context, username string) error {
+	err := db.db.QueryRow(ctx,
+		`UPDATE duel_statistics
+			SET wins = wins + 1
+			WHERE nickname = $1`, username).Scan()
+	if err != nil && err != pgx.ErrNoRows {
+		return err
+	}
 
 	return nil
 }
