@@ -56,7 +56,9 @@ func CompileDuelMessage(message twitch.PrivateMessage, answer, prefix, duelComma
 	if err != nil {
 		return "", "", err
 	}
-
+	if oppo == "" {
+		return "", "", nil
+	}
 	authorStats, err := database.DB.FindDuelUser(context.Background(), message.User.Name)
 	if err != nil {
 		return "", "", err

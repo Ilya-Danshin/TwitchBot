@@ -20,8 +20,22 @@ func (s *DuelStats) String() string {
 	return "(duels: 0, wins: 0, winrate: 0.0%)"
 }
 
-func (db *DBClient) FindDuelCommand(ctx context.Context, channel string, duel string) (string, bool, error) {
-	return db.FindCommand(ctx, channel, duel)
+func (db *DBClient) FindDuelCommand(ctx context.Context, channel string) (string, bool, error) {
+	var answer string
+
+	err := db.db.QueryRow(ctx,
+		`SELECT introduction 
+			FROM duel_commands
+			WHERE channel = $1`, channel).Scan(&answer)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return "", false, nil
+		} else {
+			return "", false, err
+		}
+	}
+
+	return answer, true, nil
 }
 
 func (db *DBClient) FindDuelUser(ctx context.Context, username string) (*DuelStats, error) {
@@ -60,9 +74,9 @@ func (db *DBClient) addNewUser(ctx context.Context, username string) error {
 func (db *DBClient) GetDuelFinishCommand(ctx context.Context, channel string) (string, error) {
 	var answer string
 	err := db.db.QueryRow(ctx,
-		`SELECT answer 
-			FROM commands
-			WHERE command='duel_finish' AND channel=$1`, channel).Scan(&answer)
+		`SELECT conclusion 
+			FROM duel_commands
+			WHERE channel=$1`, channel).Scan(&answer)
 
 	if err != nil {
 		return "", err

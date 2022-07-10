@@ -103,7 +103,7 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 
 	if strings.HasPrefix(command, t.Duel.DuelWord) {
 		if t.isDuelEnabled() {
-			answer, find, err = database.DB.FindDuelCommand(context.Background(), t.ChannelName, t.Duel.DuelWord)
+			answer, find, err = database.DB.FindDuelCommand(context.Background(), t.ChannelName)
 			if err != nil {
 				return "", "", err
 			}
