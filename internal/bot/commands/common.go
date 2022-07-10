@@ -1,16 +1,18 @@
 package commands
 
 import (
-	"TwitchBot/internal/channel_interaction"
 	"fmt"
-	"github.com/gempir/go-twitch-irc/v3"
 	"math/rand"
 	"strconv"
 	"strings"
+
+	"TwitchBot/internal/channel_interaction"
+
+	"github.com/gempir/go-twitch-irc/v3"
 )
 
 //CompileMessage start all find & replace function
-func CompileMessage(message twitch.PrivateMessage, answer string) (string, error) {
+func CompileCommonMessage(message twitch.PrivateMessage, answer string) (string, error) {
 	mes, err := compileAuthorName(answer, message.User.Name)
 	if err != nil {
 		return "", err

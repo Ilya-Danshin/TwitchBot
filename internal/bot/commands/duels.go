@@ -1,12 +1,14 @@
 package commands
 
 import (
-	"TwitchBot/database"
-	"TwitchBot/internal/channel_interaction"
 	"context"
-	"github.com/gempir/go-twitch-irc/v3"
 	"math/rand"
 	"strings"
+
+	"TwitchBot/database"
+	"TwitchBot/internal/channel_interaction"
+
+	"github.com/gempir/go-twitch-irc/v3"
 )
 
 func compileDuelStats(message string, authorStats, oppoStats *database.DuelStats) (string, error) {
@@ -39,7 +41,7 @@ func compileDuelNames(message, oppoName string) (string, error) {
 	return message, nil
 }
 
-func CompileDuel(message twitch.PrivateMessage, answer, prefix, duelCommand string) (string, string, error) {
+func CompileDuelMessage(message twitch.PrivateMessage, answer, prefix, duelCommand string) (string, string, error) {
 	mes, err := compileAuthorName(answer, message.User.Name)
 	if err != nil {
 		return "", "", err

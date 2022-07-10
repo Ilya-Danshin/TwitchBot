@@ -1,14 +1,19 @@
 package bot
 
 import (
-	"TwitchBot/internal/bot/commands"
 	"fmt"
 
 	"TwitchBot/config"
+	"TwitchBot/internal/bot/commands"
 )
 
+type bot struct {
+	Nickname string
+	Oauth    string
+}
+
 var errorsChan chan error
-var threads []*userThread
+var threads []*channelThread
 
 // InitBot just run all bot process
 func InitBot(users []*config.User, botSettings *config.BotSettings) error {
