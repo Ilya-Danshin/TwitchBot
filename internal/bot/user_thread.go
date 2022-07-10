@@ -139,8 +139,8 @@ func (t *userThread) findCommand(command string) (string, string, error) {
 	var err error
 	var find bool
 
-	if t.isDuelEnabled() {
-		if strings.HasPrefix(command, t.Duel) {
+	if strings.HasPrefix(command, t.Duel) {
+		if t.isDuelEnabled() {
 			answer, find, err = database.DB.FindDuelCommand(context.Background(), t.ChannelName, t.Duel)
 			if err != nil {
 				return "", "", err
@@ -149,20 +149,23 @@ func (t *userThread) findCommand(command string) (string, string, error) {
 				return answer, duel, nil
 			}
 		}
-	}
-	if t.isCommonEnabled() {
-		answer, find, err = database.DB.FindCommand(context.Background(), t.ChannelName, command)
-		if err != nil {
-			return "", "", err
-		}
-		if find {
-			return answer, common, nil
-		}
-	}
-	if t.isModerateEnabled() {
-		return answer, moderate, nil
-	}
+		return "", "", nil
+	} else {
+		if t.isCommonEnabled() {
+			answer, find, err = database.DB.FindCommand(context.Background(), t.ChannelName, command)
+			if err != nil {
+				return "", "", err
+			}
+			if find {
+				return answer, common, nil
+			}
 
+		}
+		if t.isModerateEnabled() {
+			return answer, moderate, nil
+		}
+
+	}
 	return answer, "", nil
 }
 

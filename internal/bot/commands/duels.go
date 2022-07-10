@@ -128,6 +128,16 @@ func GetDuelWinner(message twitch.PrivateMessage, oppo string) (string, error) {
 		return "", err
 	}
 
+	// If duel by yourself the no need to write statistics
+	if strings.ToLower(message.User.Name) == oppo {
+		mes, err = compileDuelWinner(mes, message.User.Name, oppo)
+		if err != nil {
+			return "", err
+		}
+
+		return mes, nil
+	}
+
 	winner := rand.Intn(2)
 	if winner%2 == 0 {
 		mes, err = compileDuelWinner(mes, message.User.Name, oppo)
