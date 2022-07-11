@@ -24,6 +24,7 @@ func (t *channelThread) duelCommandHandler(message twitch.PrivateMessage, answer
 	mes, oppo, err := commands.CompileDuelMessage(message, answer, t.Prefix, t.Duel.DuelWord)
 	if err != nil {
 		fmt.Printf("error compile duel message: %s error: %s", answer, err.Error())
+		return
 	}
 	if mes != "" { // If there is empty message than duel was canceled or was error
 		go t.sendMessage(mes)
@@ -32,6 +33,7 @@ func (t *channelThread) duelCommandHandler(message twitch.PrivateMessage, answer
 			mes, err = commands.GetDuelWinner(message, oppo)
 			if err != nil {
 				fmt.Printf("error get duel winner message: %s error: %s", answer, err.Error())
+				return
 			}
 			time.Sleep(time.Second * time.Duration(t.Duel.DuelDelay))
 

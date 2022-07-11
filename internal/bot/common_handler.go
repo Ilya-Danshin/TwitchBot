@@ -23,6 +23,7 @@ func (t *channelThread) commonCommandHandler(message twitch.PrivateMessage, answ
 	mes, err := commands.CompileCommonMessage(message, answer)
 	if err != nil {
 		fmt.Printf("error compile message: %s error: %s", answer, err.Error())
+		return
 	}
 	go t.sendMessage(mes)
 }

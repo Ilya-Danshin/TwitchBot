@@ -29,6 +29,7 @@ type User struct {
 	Prefix    string   `json:"prefix"`
 	Duel      string   `json:"duel"`
 	DuelDelay int      `json:"duel_delay"`
+	Subday    string   `json:"subday"`
 	Modules   []string `json:"modules"`
 }
 

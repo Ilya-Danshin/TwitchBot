@@ -22,7 +22,9 @@ type channelThread struct {
 	ChannelName string
 	Prefix      string
 	Duel        duelSettings
-	Modules     []string
+	SubdayWord  string
+
+	Modules []string
 
 	Client *twitch.Client
 }
@@ -31,6 +33,7 @@ const (
 	common   string = "common"
 	duel            = "duel"
 	moderate        = "moderate"
+	subday          = "subday"
 )
 
 //NewUserThread create new thread object
@@ -47,7 +50,8 @@ func NewUserThread(user *config.User, botCfg *config.BotSettings) *channelThread
 			DuelWord:  user.Duel,
 			DuelDelay: user.DuelDelay,
 		},
-		Modules: user.Modules,
+		SubdayWord: user.Subday,
+		Modules:    user.Modules,
 	}
 }
 
@@ -89,6 +93,10 @@ func (t *channelThread) messageFilter(message twitch.PrivateMessage) {
 				t.moderateCommandHandler(message, answer)
 				return
 			}
+			if commandType == subday {
+				t.subdayCommandHandler(message, answer)
+				return
+			}
 
 		}
 	}
@@ -111,22 +119,35 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 				return answer, duel, nil
 			}
 		}
-		return "", "", nil
-	} else {
-		if t.isCommonEnabled() {
-			answer, find, err = database.DB.FindCommand(context.Background(), t.ChannelName, command)
+		return "", duel, nil
+	}
+	if strings.HasPrefix(command, t.SubdayWord) {
+		if t.isSubdayEnabled() {
+			answer, find, err = database.DB.FindSubdayCommand(context.Background(), t.ChannelName)
 			if err != nil {
 				return "", "", err
 			}
-			if find {
-				return answer, common, nil
-			}
-		}
-		if t.isModerateEnabled() {
-			return answer, moderate, nil
-		}
 
+			if find {
+				return answer, subday, nil
+			}
+
+			return "", subday, nil
+		}
 	}
+	if t.isCommonEnabled() {
+		answer, find, err = database.DB.FindCommand(context.Background(), t.ChannelName, command)
+		if err != nil {
+			return "", "", err
+		}
+		if find {
+			return answer, common, nil
+		}
+	}
+	if t.isModerateEnabled() {
+		return answer, moderate, nil
+	}
+
 	return answer, "", nil
 }
 
