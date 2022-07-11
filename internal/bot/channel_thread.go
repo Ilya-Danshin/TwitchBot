@@ -145,7 +145,9 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 		}
 	}
 	if t.isModerateEnabled() {
-		answer, find, err = database.DB.FindModerateCommand(context.Background(), t.ChannelName, command)
+		split := strings.SplitN(command, " ", 2)
+
+		answer, find, err = database.DB.FindModerateCommand(context.Background(), t.ChannelName, split[0])
 		if err != nil {
 			return "", "", err
 		}
