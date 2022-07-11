@@ -28,7 +28,7 @@ func (db *DBClient) InitDB(ctx context.Context, config *config.DBConfig) error {
 	return nil
 }
 
-func (db *DBClient) FindCommand(ctx context.Context, channel, command string) (string, bool, error) {
+func (db *DBClient) FindCommonCommand(ctx context.Context, channel, command string) (string, bool, error) {
 	var answer string
 
 	err := db.db.QueryRow(ctx,

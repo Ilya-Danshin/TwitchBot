@@ -24,40 +24,12 @@ type ChatInfo struct {
 	Chatters     Chatters
 }
 
-type ChatClient struct {
-	cli *http.Client
-}
+func (cc *ChatClient) GetChannelChatters(channel string) (*ChatInfo, error) {
 
-/*type options struct{
-	endpoint string
-	additionalHeaders map[string]string
-}
-
-func NewClient () *ChatClient {
-	return &ChatClient{
-		cli: &http.Client{
-			Transport:
-		},
-	}
-}
-
-func (cc *ChatClient) post(opt options) {
-	req := http.NewRequest("POST", ,)
-
-	defaultHeaders := map[string]string{
-		"Accept": "",
-	}
-
-	cc.cli.Do(req)
-}
-
-func get() {
-
-}*/
-
-func /*(cc *ChatClient)*/ GetChannelChatters(channel string) (*ChatInfo, error) {
-
-	resp, err := http.Get("http://tmi.twitch.tv/group/user/" + strings.ToLower(channel) + "/chatters")
+	//resp, err := http.Get("http://tmi.twitch.tv/group/user/" + strings.ToLower(channel) + "/chatters")
+	resp, err := cc.get(options{
+		endpoint: "http://tmi.twitch.tv/group/user/" + strings.ToLower(channel) + "/chatters",
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -82,8 +54,8 @@ func /*(cc *ChatClient)*/ GetChannelChatters(channel string) (*ChatInfo, error) 
 	return &info, nil
 }
 
-func IsChatterInChat(channel, nickname string) (bool, error) {
-	info, err := GetChannelChatters(channel)
+func (cc *ChatClient) IsChatterInChat(channel, nickname string) (bool, error) {
+	info, err := cc.GetChannelChatters(channel)
 	if err != nil {
 		return false, err
 	}

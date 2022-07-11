@@ -136,7 +136,7 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 		}
 	}
 	if t.isCommonEnabled() {
-		answer, find, err = database.DB.FindCommand(context.Background(), t.ChannelName, command)
+		answer, find, err = database.DB.FindCommonCommand(context.Background(), t.ChannelName, command)
 		if err != nil {
 			return "", "", err
 		}
@@ -145,7 +145,13 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 		}
 	}
 	if t.isModerateEnabled() {
-		return answer, moderate, nil
+		answer, find, err = database.DB.FindModerateCommand(context.Background(), t.ChannelName, command)
+		if err != nil {
+			return "", "", err
+		}
+		if find {
+			return answer, moderate, nil
+		}
 	}
 
 	return answer, "", nil

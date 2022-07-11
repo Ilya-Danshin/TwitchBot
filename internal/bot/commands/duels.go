@@ -93,7 +93,9 @@ func chooseDuelTarget(message twitch.PrivateMessage, prefix, duelCommand string)
 			oppo = strings.TrimPrefix(oppo, "@")
 		}
 		oppo = strings.ToLower(oppo)
-		inChat, err := channel_interaction.IsChatterInChat(message.Channel, oppo)
+		cc := channel_interaction.NewClient()
+		inChat, err := cc.IsChatterInChat(message.Channel, oppo)
+		//inChat, err := channel_interaction.IsChatterInChat(message.Channel, oppo)
 		if err != nil {
 			return "", err
 		}

@@ -9,11 +9,14 @@ import (
 var reAuthorName *regexp.Regexp
 var reChance *regexp.Regexp
 var reRandomChatter *regexp.Regexp
+
 var reDuelStatsAuthor *regexp.Regexp
 var reDuelStatsOppo *regexp.Regexp
 var reDuelOppo *regexp.Regexp
 var reDuelWinner *regexp.Regexp
 var reDuelLoser *regexp.Regexp
+
+var reSetTitle *regexp.Regexp
 
 //REInit initialize regular expression for special expression that should be replaced
 // by some expression like number or message author name

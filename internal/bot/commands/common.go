@@ -99,7 +99,9 @@ func compileRandomChatter(channel, message string) (string, string, error) {
 }
 
 func getRandomChatter(channel string) (string, error) {
-	info, err := channel_interaction.GetChannelChatters(channel)
+	cc := channel_interaction.NewClient()
+	info, err := cc.GetChannelChatters(channel)
+	//info, err := channel_interaction.GetChannelChatters(channel)
 	if err != nil {
 		return "", err
 	}
