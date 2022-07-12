@@ -1,10 +1,23 @@
 [
   {
     "name": "",
-    "modules": []
+    "prefix": "",
+    "duel": "",
+    "duel_delay": 3,
+    "modules": [
+      "common",
+      "duel",
+      "moderate",
+      "subday"
+    ]
   },
   {
     "name": "",
-    "modules": []
+    "prefix": "",
+    "duel": "",
+    "duel_delay": 1,
+    "modules": [
+      "common"
+    ]
   }
 ]

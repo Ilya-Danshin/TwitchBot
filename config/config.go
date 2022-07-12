@@ -21,11 +21,21 @@ type DBConfig struct {
 type Config struct {
 	DBConf *DBConfig
 	Users  []*User
+	Bot    *BotSettings
 }
 
 type User struct {
-	Name    string   `json:"name"`
-	Modules []string `json:"modules"`
+	Name      string   `json:"name"`
+	Prefix    string   `json:"prefix"`
+	Duel      string   `json:"duel"`
+	DuelDelay int      `json:"duel_delay"`
+	Subday    string   `json:"subday"`
+	Modules   []string `json:"modules"`
+}
+
+type BotSettings struct {
+	Nickname string
+	Oauth    string
 }
 
 func InitConfig() error {
@@ -53,9 +63,15 @@ func ParseConfig() (*Config, error) {
 		return nil, err
 	}
 
+	bot, err := getBot()
+	if err != nil {
+		return nil, err
+	}
+
 	return &Config{
 		DBConf: dbConf,
 		Users:  users,
+		Bot:    bot,
 	}, nil
 }
 
@@ -117,4 +133,21 @@ func getUsers() ([]*User, error) {
 	}
 
 	return users, nil
+}
+
+func getBot() (*BotSettings, error) {
+	nickname, ok := os.LookupEnv("BOT_NICKNAME")
+	if !ok {
+		return nil, fmt.Errorf("env BOT_NICKNAME is not set")
+	}
+
+	oauth, ok := os.LookupEnv("BOT_OAUTH")
+	if !ok {
+		return nil, fmt.Errorf("env BOT_OAUTH is not set")
+	}
+
+	return &BotSettings{
+		Nickname: nickname,
+		Oauth:    oauth,
+	}, nil
 }
