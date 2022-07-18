@@ -11,7 +11,7 @@ import (
 	"github.com/gempir/go-twitch-irc/v3"
 )
 
-//CompileMessage start all find & replace function
+//CompileCommonMessage start all find & replace function
 func CompileCommonMessage(message twitch.PrivateMessage, answer string) (string, error) {
 	mes, err := compileAuthorName(answer, message.User.Name)
 	if err != nil {
@@ -67,7 +67,7 @@ func compileChance(message string) (string, error) {
 
 //getInterval from string {%num1:num2%} get low and bottom border
 func getInterval(interval string) (int, int, error) {
-	interval = interval[9 : len(interval)-2] // 9 = 2('{%') + 7('chance:')
+	interval = interval[len("{%chance:") : len(interval)-2]
 	inter := strings.Split(interval, ":")
 
 	lowBorder, err := strconv.Atoi(inter[0])

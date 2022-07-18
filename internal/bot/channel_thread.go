@@ -27,6 +27,7 @@ type channelThread struct {
 	Modules []string
 
 	Client *twitch.Client
+	ctx    context.Context
 }
 
 const (
@@ -52,6 +53,7 @@ func NewUserThread(user *config.User, botCfg *config.BotSettings) *channelThread
 		},
 		SubdayWord: user.Subday,
 		Modules:    user.Modules,
+		ctx:        context.Background(),
 	}
 }
 
@@ -73,34 +75,30 @@ func (t *channelThread) Run() {
 
 //messageFilter do all work with received message
 func (t *channelThread) messageFilter(message twitch.PrivateMessage) {
-	if strings.HasPrefix(message.Message, t.Prefix) { // cansel messages without prefix
-		answer, commandType, err := t.findCommand(message.Message[len(t.Prefix):])
-		if err != nil {
-			fmt.Printf("error to find command: %s error: %s", message.Message, err.Error())
-			return
-		}
-
-		if answer != "" {
-			if commandType == common {
-				t.commonCommandHandler(message, answer)
-				return
-			}
-			if commandType == duel {
-				t.duelCommandHandler(message, answer)
-				return
-			}
-			if commandType == moderate {
-				t.moderateCommandHandler(message, answer)
-				return
-			}
-			if commandType == subday {
-				t.subdayCommandHandler(message, answer)
-				return
-			}
-
-		}
+	if !strings.HasPrefix(message.Message, t.Prefix) { // cansel messages without prefix
+		return
 	}
 
+	answer, commandType, err := t.findCommand(message.Message[len(t.Prefix):])
+	if err != nil {
+		fmt.Printf("error to find command: %s error: %s", message.Message, err.Error())
+		return
+	}
+
+	if answer == "" {
+		return
+	}
+
+	switch commandType {
+	case common:
+		t.commonCommandHandler(message, answer)
+	case duel:
+		t.duelCommandHandler(message, answer)
+	case moderate:
+		t.moderateCommandHandler(message, answer)
+	case subday:
+		t.subdayCommandHandler(message, answer)
+	}
 }
 
 //findCommand start search for command in DB
@@ -111,7 +109,7 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 
 	if strings.HasPrefix(command, t.Duel.DuelWord) {
 		if t.isDuelEnabled() {
-			answer, find, err = database.DB.FindDuelCommand(context.Background(), t.ChannelName)
+			answer, find, err = database.DB.FindDuelCommand(t.ctx, t.ChannelName)
 			if err != nil {
 				return "", "", err
 			}
@@ -123,7 +121,7 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 	}
 	if strings.HasPrefix(command, t.SubdayWord) {
 		if t.isSubdayEnabled() {
-			answer, find, err = database.DB.FindSubdayCommand(context.Background(), t.ChannelName)
+			answer, find, err = database.DB.FindSubdayCommand(t.ctx, t.ChannelName)
 			if err != nil {
 				return "", "", err
 			}
@@ -136,7 +134,7 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 		}
 	}
 	if t.isCommonEnabled() {
-		answer, find, err = database.DB.FindCommonCommand(context.Background(), t.ChannelName, command)
+		answer, find, err = database.DB.FindCommonCommand(t.ctx, t.ChannelName, command)
 		if err != nil {
 			return "", "", err
 		}
@@ -147,7 +145,7 @@ func (t *channelThread) findCommand(command string) (string, string, error) {
 	if t.isModerateEnabled() {
 		split := strings.SplitN(command, " ", 2)
 
-		answer, find, err = database.DB.FindModerateCommand(context.Background(), t.ChannelName, split[0])
+		answer, find, err = database.DB.FindModerateCommand(t.ctx, t.ChannelName, split[0])
 		if err != nil {
 			return "", "", err
 		}

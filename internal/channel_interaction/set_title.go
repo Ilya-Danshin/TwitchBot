@@ -49,16 +49,16 @@ func (cc *ChatClient) SetTitle(channel, title string) error {
 		return err
 	}
 
-	if resp.StatusCode == http.StatusNoContent {
+	switch resp.StatusCode {
+	case http.StatusNoContent:
 		return nil
-	}
-	if resp.StatusCode == http.StatusBadRequest {
+	case http.StatusBadRequest:
 		return fmt.Errorf("missing or invalid parameter")
-	}
-	if resp.StatusCode == http.StatusInternalServerError {
+	case http.StatusInternalServerError:
 		return fmt.Errorf("internal server error; failed to update channel")
+	default:
+		return fmt.Errorf("unknown responce status")
 	}
-	return fmt.Errorf("unknown responce status")
 }
 
 func (cc *ChatClient) getUserInfo(username string) (*http.Response, error) {

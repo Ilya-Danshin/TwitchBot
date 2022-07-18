@@ -41,7 +41,7 @@ func compileDuelNames(message, oppoName string) (string, error) {
 	return message, nil
 }
 
-func CompileDuelMessage(message twitch.PrivateMessage, answer, prefix, duelCommand string) (string, string, error) {
+func CompileDuelMessage(ctx context.Context, message twitch.PrivateMessage, answer, prefix, duelCommand string) (string, string, error) {
 	mes, err := compileAuthorName(answer, message.User.Name)
 	if err != nil {
 		return "", "", err
@@ -59,11 +59,11 @@ func CompileDuelMessage(message twitch.PrivateMessage, answer, prefix, duelComma
 	if oppo == "" {
 		return "", "", nil
 	}
-	authorStats, err := database.DB.FindDuelUser(context.Background(), message.User.Name)
+	authorStats, err := database.DB.FindDuelUser(ctx, message.User.Name)
 	if err != nil {
 		return "", "", err
 	}
-	oppoStats, err := database.DB.FindDuelUser(context.Background(), oppo)
+	oppoStats, err := database.DB.FindDuelUser(ctx, oppo)
 	if err != nil {
 		return "", "", err
 	}
@@ -86,13 +86,7 @@ func chooseDuelTarget(message twitch.PrivateMessage, prefix, duelCommand string)
 	var err error
 
 	if len([]rune(message.Message)) > len([]rune(prefix+duelCommand)) {
-		// If its target duel
-		// Trim duel-word and '@'
-		oppo = strings.TrimPrefix(message.Message, prefix+duelCommand+" ")
-		if oppo[0] == '@' {
-			oppo = strings.TrimPrefix(oppo, "@")
-		}
-		oppo = strings.ToLower(oppo)
+		oppo = getOppoName(message.Message, prefix, duelCommand)
 		cc := channel_interaction.NewClient()
 		inChat, err := cc.IsChatterInChat(message.Channel, oppo)
 		//inChat, err := channel_interaction.IsChatterInChat(message.Channel, oppo)
@@ -111,6 +105,16 @@ func chooseDuelTarget(message twitch.PrivateMessage, prefix, duelCommand string)
 	}
 
 	return oppo, nil
+}
+
+//getOppoName trim prefix, duel word and "@" if its target duel
+func getOppoName(message string, prefix, duelCommand string) string {
+	oppo := strings.TrimPrefix(message, prefix+duelCommand+" ")
+	if oppo[0] == '@' {
+		oppo = strings.TrimPrefix(oppo, "@")
+	}
+
+	return strings.ToLower(oppo)
 }
 
 func GetDuelWinner(message twitch.PrivateMessage, oppo string) (string, error) {
