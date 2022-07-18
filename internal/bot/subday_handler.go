@@ -10,13 +10,7 @@ import (
 )
 
 func (t *channelThread) isSubdayEnabled() bool {
-	for _, module := range t.Modules {
-		if module == subday {
-			return true
-		}
-	}
-
-	return false
+	return isContain(subday, t.Modules)
 }
 
 func (t *channelThread) subdayCommandHandler(message twitch.PrivateMessage, answer string) {

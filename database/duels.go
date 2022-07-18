@@ -30,9 +30,8 @@ func (db *DBClient) FindDuelCommand(ctx context.Context, channel string) (string
 	if err != nil {
 		if err == pgx.ErrNoRows {
 			return "", false, nil
-		} else {
-			return "", false, err
 		}
+		return "", false, err
 	}
 
 	return answer, true, nil
@@ -62,7 +61,7 @@ func (db *DBClient) FindDuelUser(ctx context.Context, username string) (*DuelSta
 func (db *DBClient) addNewUser(ctx context.Context, username string) error {
 	rows, err := db.db.Query(ctx,
 		`INSERT INTO duel_statistics
-			VALUES ($1, 0, 0)`, username)
+			VALUES ($1)`, username)
 	if err != nil {
 		return err
 	}

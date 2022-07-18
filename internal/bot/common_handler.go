@@ -9,13 +9,7 @@ import (
 )
 
 func (t *channelThread) isCommonEnabled() bool {
-	for _, module := range t.Modules {
-		if module == common {
-			return true
-		}
-	}
-
-	return false
+	return isContain(common, t.Modules)
 }
 
 //commonCommandHandler handler for all common chat commands

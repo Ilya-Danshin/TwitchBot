@@ -7,13 +7,7 @@ import (
 )
 
 func (t *channelThread) isModerateEnabled() bool {
-	for _, module := range t.Modules {
-		if module == moderate {
-			return true
-		}
-	}
-
-	return false
+	return isContain(moderate, t.Modules)
 }
 
 //moderateCommandHandler handler for all moderate chat commands

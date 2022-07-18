@@ -10,18 +10,12 @@ import (
 )
 
 func (t *channelThread) isDuelEnabled() bool {
-	for _, module := range t.Modules {
-		if module == duel {
-			return true
-		}
-	}
-
-	return false
+	return isContain(duel, t.Modules)
 }
 
 //duelCommandHandler handler for duel chat command
 func (t *channelThread) duelCommandHandler(message twitch.PrivateMessage, answer string) {
-	mes, oppo, err := commands.CompileDuelMessage(message, answer, t.Prefix, t.Duel.DuelWord)
+	mes, oppo, err := commands.CompileDuelMessage(t.ctx, message, answer, t.Prefix, t.Duel.DuelWord)
 	if err != nil {
 		fmt.Printf("error compile duel message: %s error: %s", answer, err.Error())
 		return
